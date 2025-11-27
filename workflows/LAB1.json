@@ -1,0 +1,127 @@
+{
+  "name": "LAB1",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -208
+      ],
+      "id": "c992bd28-a996-466a-b0f7-0b468ebe359c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FcJV3CPgLRKstIbLQeIV1t0cVOmrkXL3Pugr2SHTOWM",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FcJV3CPgLRKstIbLQeIV1t0cVOmrkXL3Pugr2SHTOWM/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:A"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        -208
+      ],
+      "id": "d38dc34d-3b87-4d10-b7b2-4b32d35321e8",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVzmea10mO8slYLj",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json[\"email\"]}}",
+        "subject": "Ma Newsletter",
+        "emailType": "text",
+        "message": "Bonjour à tous,  Ce mois-ci, nous avons plein de surprises pour vous ! 🌟 De nouvelles fonctionnalités, des astuces pratiques et des offres exclusives vous attendent. Ne manquez pas nos conseils pour tirer le meilleur parti de nos services et rester à jour avec toutes nos nouveautés.  💡 À la une :  Astuce du mois pour optimiser votre expérience  Offre spéciale réservée à nos abonnés  Événement à venir à ne pas manquer  Restez connectés et profitez pleinement de ce que nous avons préparé pour vous. Votre satisfaction est notre priorité !  À très vite, L’équipe",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        -208
+      ],
+      "id": "f742712c-012c-4a30-9585-9b0180b681a9",
+      "name": "Send a message",
+      "webhookId": "d3cfd62d-c3a2-4afc-8f40-a692bc92a980",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "g9G0D02C0U7lMD5b",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "86456fbe-636a-475c-a90c-5e0f4d7d79c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dd64c57c1bdc13dc2f288202d01ecd03fafdee82fb3b14aa205fbbe50f35f44f"
+  },
+  "id": "KyDvt1Puta6LQr5l",
+  "tags": [
+    {
+      "name": "V1.0",
+      "id": "zs0961KwBvkU38GY",
+      "updatedAt": "2025-11-12T21:34:10.956Z",
+      "createdAt": "2025-11-11T21:34:10.956Z"
+    }
+  ]
+}
