@@ -1,0 +1,236 @@
+{
+  "name": "LAB1",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -384
+      ],
+      "id": "c992bd28-a996-466a-b0f7-0b468ebe359c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FcJV3CPgLRKstIbLQeIV1t0cVOmrkXL3Pugr2SHTOWM",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FcJV3CPgLRKstIbLQeIV1t0cVOmrkXL3Pugr2SHTOWM/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:A"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        -208
+      ],
+      "id": "d38dc34d-3b87-4d10-b7b2-4b32d35321e8",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVzmea10mO8slYLj",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json[\"email\"]}}",
+        "subject": "=Weekly Newsletter – {{ $now.startOf('week').toISODate() }}",
+        "emailType": "text",
+        "message": "={{ $json[\"output\"][0][\"content\"][0][\"text\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        -288
+      ],
+      "id": "f742712c-012c-4a30-9585-9b0180b681a9",
+      "name": "Send a message",
+      "webhookId": "d3cfd62d-c3a2-4afc-8f40-a692bc92a980",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "g9G0D02C0U7lMD5b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu es un assistant qui écrit une newsletter courte, claire et professionnelle.\n\nContexte :\n{{ $json.context }}\n\nTemplate :\nTITRE :\n- Donne un titre accrocheur.\n\nINTRO :\n- Résume l'idée principale en 2 phrases.\n\nSECTION 1 :\n- Développe un fait ou un concept important.\n- 3 à 5 phrases simples.\n\nCONCLUSION :\n- Donne 1 conseil concret ou une perspective.\n\nContraintes :\n- Style : simple, amical, compréhensible\n- Maximum : 150 mots\n- Pas de chiffres inventés\n- Pas de phrases trop longues\n\nGénère maintenant la newsletter."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -624
+      ],
+      "id": "8034213e-ee47-4af6-aed6-058f69fca28e",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "gHdbbnNfOAX3irk0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "23b8f022-0d45-46e0-b90f-89dfb7fd98fb",
+              "name": "context",
+              "value": "\"Actualité tech de la semaine, orientée IA et outils no-code.\"",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -272,
+        -864
+      ],
+      "id": "f098cef6-e6de-4f40-ba47-bea7df2d552d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        160,
+        -208
+      ],
+      "id": "3f76a93b-76f1-4ad9-b86c-c628a347c05a",
+      "name": "Merge"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "02ff44d8-9b60-4a14-b468-2c3d42eadc65",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dd64c57c1bdc13dc2f288202d01ecd03fafdee82fb3b14aa205fbbe50f35f44f"
+  },
+  "id": "KyDvt1Puta6LQr5l",
+  "tags": [
+    {
+      "updatedAt": "2025-11-27T21:34:10.956Z",
+      "createdAt": "2025-11-27T21:34:10.956Z",
+      "id": "zs0961KwBvkU38GY",
+      "name": "V1.0"
+    }
+  ]
+}
