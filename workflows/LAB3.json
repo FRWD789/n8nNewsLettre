@@ -1,0 +1,307 @@
+{
+  "name": "LAB3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -384
+      ],
+      "id": "c992bd28-a996-466a-b0f7-0b468ebe359c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FcJV3CPgLRKstIbLQeIV1t0cVOmrkXL3Pugr2SHTOWM",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FcJV3CPgLRKstIbLQeIV1t0cVOmrkXL3Pugr2SHTOWM/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:A"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        -208
+      ],
+      "id": "d38dc34d-3b87-4d10-b7b2-4b32d35321e8",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVzmea10mO8slYLj",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json[\"email\"]}}",
+        "subject": "=Weekly Newsletter – {{ $now.startOf('week').toISODate() }}",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        -288
+      ],
+      "id": "f742712c-012c-4a30-9585-9b0180b681a9",
+      "name": "Send a message",
+      "webhookId": "d3cfd62d-c3a2-4afc-8f40-a692bc92a980",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "g9G0D02C0U7lMD5b",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a professional newsletter writer. Here are 15 news items:\n\n{{ $json.formatted_items }}\n\nCreate a professional daily newsletter that:\n1. Provides a brief executive summary (2-3 sentences)\n2. Groups related stories together\n3. Highlights the most important items\n4. Includes a brief insight on each story (1-2 sentences)\n5. Formats with clear headers and bullet points\n\nKeep the total length under 500 words."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        -512
+      ],
+      "id": "8034213e-ee47-4af6-aed6-058f69fca28e",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "gHdbbnNfOAX3irk0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        320,
+        -624
+      ],
+      "id": "3f76a93b-76f1-4ad9-b86c-c628a347c05a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "url": "https://www.404media.co/rss",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -576,
+        -736
+      ],
+      "id": "053728c1-34d2-43b3-8622-013138e8a8ab",
+      "name": "RSS Read",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst allItems = items.map(item => {\n  const data = item.json;\n  return `\n    Title: ${data.title || 'N/A'}\n    Description: ${data.description || 'N/A'}\n    Link: ${data.link || 'N/A'}\n    ---`;\n    }).join('\\n');\n\nreturn {\n  json: {\n    formatted_items: allItems,\n    item_count: items.length\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        -832
+      ],
+      "id": "54e5b63b-ac8e-4543-9e18-c375d1b01eda",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function Node - Generate Professional HTML Newsletter with ChatGPT Summary\n\n// Get the ChatGPT response from previous node\n// Replace 'ChatGPT' with your actual ChatGPT node name\nlet chatGptResponse = '';\nlet newsItems = [];\n\ntry {\n    const gptData = $input.first().json.output[0].content\n    if (gptData) {\n        // Try different possible response fields\n        chatGptResponse = $input.first().json.output[0].content[0].text\n    }\n} catch (e) {\n    chatGptResponse = '';\n}\n\n// Extract RSS items - handle both single item and array inputs\ntry {\n    const items = $input.first().json.formatted_items\n    if (Array.isArray(items)) {\n        newsItems = items.map(item => item.json || item).filter(item => item);\n    } else {\n        newsItems = [items.json || items];\n    }\n} catch (e) {\n    newsItems = [];\n}\n\n// Create clean HTML newsletter template with ChatGPT injection\nconst htmlNewsletter = `\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Daily News Letter</title>\n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n        \n        body {\n            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n            background-color: #f5f5f5;\n            color: #2c3e50;\n            line-height: 1.6;\n        }\n        \n        .container {\n            max-width: 600px;\n            margin: 0 auto;\n            background-color: #ffffff;\n            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);\n        }\n        \n        .header {\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            padding: 40px 30px;\n            text-align: center;\n            color: white;\n        }\n        \n        .header h1 {\n            font-size: 28px;\n            font-weight: 700;\n            letter-spacing: -0.5px;\n            margin-bottom: 8px;\n        }\n        \n        .header p {\n            font-size: 14px;\n            opacity: 0.9;\n            font-weight: 300;\n        }\n        \n        .content {\n            padding: 40px 30px;\n        }\n        \n        /* Executive Summary Section */\n        .executive-summary {\n            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);\n            padding: 24px;\n            border-radius: 12px;\n            margin-bottom: 32px;\n            border-left: 4px solid #667eea;\n        }\n        \n        .executive-summary h2 {\n            font-size: 16px;\n            font-weight: 700;\n            margin-bottom: 14px;\n            color: #2c3e50;\n            display: flex;\n            align-items: center;\n            gap: 8px;\n        }\n        \n        .summary-icon {\n            font-size: 18px;\n        }\n        \n        .executive-summary-content {\n            font-size: 14px;\n            color: #444;\n            line-height: 1.8;\n            font-weight: 500;\n        }\n        \n        .executive-summary-content p {\n            margin-bottom: 12px;\n        }\n        \n        .executive-summary-content p:last-child {\n            margin-bottom: 0;\n        }\n        \n        .executive-summary-content ul,\n        .executive-summary-content ol {\n            margin-left: 20px;\n            margin-top: 12px;\n            margin-bottom: 12px;\n        }\n        \n        .executive-summary-content li {\n            margin-bottom: 8px;\n            color: #555;\n        }\n        \n        .divider {\n            height: 2px;\n            background: linear-gradient(90deg, transparent, #667eea, transparent);\n            margin: 32px 0;\n        }\n        \n        .stories-section h2 {\n            font-size: 18px;\n            font-weight: 700;\n            margin-bottom: 24px;\n            color: #2c3e50;\n        }\n        \n        .news-item {\n            padding: 24px 0;\n            border-bottom: 1px solid #e8e8e8;\n            transition: all 0.3s ease;\n        }\n        \n        .news-item:last-child {\n            border-bottom: none;\n        }\n        \n        .news-item-header {\n            display: flex;\n            align-items: flex-start;\n            margin-bottom: 12px;\n        }\n        \n        .news-number {\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            width: 28px;\n            height: 28px;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            color: white;\n            border-radius: 50%;\n            font-weight: 600;\n            font-size: 13px;\n            flex-shrink: 0;\n            margin-right: 12px;\n        }\n        \n        .news-item h3 {\n            font-size: 16px;\n            font-weight: 600;\n            color: #2c3e50;\n            margin-bottom: 8px;\n            line-height: 1.4;\n        }\n        \n        .news-item-meta {\n            font-size: 12px;\n            color: #999;\n            margin-bottom: 10px;\n        }\n        \n        .news-item p {\n            font-size: 14px;\n            color: #555;\n            line-height: 1.7;\n            margin-bottom: 12px;\n        }\n        \n        .read-more {\n            display: inline-block;\n            color: #667eea;\n            text-decoration: none;\n            font-size: 13px;\n            font-weight: 600;\n            transition: color 0.3s ease;\n        }\n        \n        .read-more:hover {\n            color: #764ba2;\n            text-decoration: underline;\n        }\n        \n        .footer {\n            background-color: #f9f9f9;\n            padding: 30px;\n            text-align: center;\n            border-top: 1px solid #e8e8e8;\n        }\n        \n        .footer p {\n            font-size: 12px;\n            color: #999;\n            margin-bottom: 8px;\n        }\n        \n        .footer-divider {\n            height: 1px;\n            background-color: #e8e8e8;\n            margin: 16px 0;\n        }\n        \n        .social-links {\n            margin-top: 16px;\n        }\n        \n        .social-links a {\n            display: inline-block;\n            margin: 0 8px;\n            color: #667eea;\n            text-decoration: none;\n            font-size: 12px;\n            font-weight: 500;\n        }\n        \n        @media (max-width: 600px) {\n            .container {\n                max-width: 100%;\n                border-radius: 0;\n            }\n            \n            .header {\n                padding: 30px 20px;\n            }\n            \n            .header h1 {\n                font-size: 24px;\n            }\n            \n            .content {\n                padding: 24px 20px;\n            }\n            \n            .news-item {\n                padding: 16px 0;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <!-- Header -->\n        <div class=\"header\">\n            <h1>📰 Daily News Letter</h1>\n            <p>Your curated news digest • ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>\n        </div>\n        \n        <!-- Content -->\n        <div class=\"content\">\n            <!-- Executive Summary from ChatGPT -->\n            <div class=\"executive-summary\">\n                <h2>\n                    <span class=\"summary-icon\">✨</span>\n                    Executive Summary\n                </h2>\n                <div class=\"executive-summary-content\">\n                    ${formatChatGptOutput(chatGptResponse)}\n                </div>\n            </div>\n            \n            <div class=\"divider\"></div>\n            \n            <!-- Full Stories -->\n            <div class=\"stories-section\">\n                <h2>📑 Today's Stories</h2>\n                \n                <div>\n                    ${newsItems.map((item, index) => `\n                        <div class=\"news-item\">\n                            <div class=\"news-item-header\">\n                                <div class=\"news-number\">${index + 1}</div>\n                                <div>\n                                    <h3>${sanitizeHtml(item.title || 'Untitled')}</h3>\n                                    <div class=\"news-item-meta\">\n                                        ${item.creator ? `By ${sanitizeHtml(item.creator)} • ` : ''}${formatDate(item.pubDate)}\n                                    </div>\n                                </div>\n                            </div>\n                            <p>${sanitizeHtml(item.description || item.content || 'No description available').substring(0, 220)}...</p>\n                            <a href=\"${item.link}\" class=\"read-more\">Read full story →</a>\n                        </div>\n                    `).join('')}\n                </div>\n            </div>\n        </div>\n        \n        <!-- Footer -->\n        <div class=\"footer\">\n            <p><strong>Daily News Letter</strong></p>\n            <p>Delivered to your inbox every morning</p>\n            <div class=\"footer-divider\"></div>\n            <div class=\"social-links\">\n                <a href=\"#unsubscribe\">Unsubscribe</a>\n                <a href=\"#preferences\">Preferences</a>\n                <a href=\"#archive\">Archive</a>\n            </div>\n            <p style=\"margin-top: 16px; font-size: 11px;\">© ${new Date().getFullYear()} News Letter. All rights reserved.</p>\n        </div>\n    </div>\n</body>\n</html>\n`;\n\n// Helper functions\nfunction sanitizeHtml(text) {\n    if (!text) return '';\n    // Convert to string if it's not already\n    text = String(text);\n    return text\n        .replace(/&/g, '&amp;')\n        .replace(/</g, '&lt;')\n        .replace(/>/g, '&gt;')\n        .replace(/\"/g, '&quot;')\n        .replace(/'/g, '&#039;')\n        .replace(/<[^>]*>/g, '');\n}\n\nfunction formatDate(dateString) {\n    if (!dateString) return 'Recently';\n    const date = new Date(dateString);\n    const today = new Date();\n    const yesterday = new Date(today);\n    yesterday.setDate(yesterday.getDate() - 1);\n    \n    if (date.toDateString() === today.toDateString()) {\n        return 'Today';\n    } else if (date.toDateString() === yesterday.toDateString()) {\n        return 'Yesterday';\n    } else {\n        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });\n    }\n}\n\nfunction formatChatGptOutput(text) {\n    if (!text) return '<p>Summary not available</p>';\n    \n    // Convert to string if it's not already\n    text = String(text);\n    \n    // Sanitize the text\n    let formatted = sanitizeHtml(text);\n    \n    // Convert markdown-style formatting to HTML\n    // Convert **bold** to <strong>\n    formatted = formatted.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');\n    \n    // Convert *italic* to <em>\n    formatted = formatted.replace(/\\*(.*?)\\*/g, '<em>$1</em>');\n    \n    // Convert numbered lists\n    formatted = formatted.replace(/^\\d+\\.\\s+/gm, '');\n    \n    // Split by double line breaks for paragraphs\n    const paragraphs = formatted.split(/\\n\\n+/);\n    \n    return paragraphs\n        .filter(p => p.trim())\n        .map(p => {\n            // Check if it's a list item\n            if (p.trim().match(/^[-•]/m)) {\n                const items = p.split(/\\n/).filter(line => line.trim());\n                return '<ul>' + items.map(item => `<li>${item.replace(/^[-•]\\s+/, '')}</li>`).join('') + '</ul>';\n            }\n            return `<p>${p.trim()}</p>`;\n        })\n        .join('');\n}\n\nreturn {\n    json: {\n        html: htmlNewsletter,\n        itemCount: newsItems.length,\n        summaryIncluded: !!chatGptResponse\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -752
+      ],
+      "id": "00e649d6-0bc7-435e-8ca3-30521ecafd13",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -80,
+        -816
+      ],
+      "id": "94a56944-0dfe-49be-a3cf-d8afeae0b781",
+      "name": "Merge1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b9d9fa27-b0c1-4b38-afa6-af117901f4ed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dd64c57c1bdc13dc2f288202d01ecd03fafdee82fb3b14aa205fbbe50f35f44f"
+  },
+  "id": "KyDvt1Puta6LQr5l",
+  "tags": [
+    {
+      "name": "v3.0",
+      "id": "piwGWxfeN7bLb5m8",
+      "updatedAt": "2025-12-02T22:02:24.422Z",
+      "createdAt": "2025-12-02T22:02:24.422Z"
+    }
+  ]
+}

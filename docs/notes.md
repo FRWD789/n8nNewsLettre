@@ -36,3 +36,10 @@ Chaque node réalise une action, par exemple :
 * Un node pour lire un fichier
 * Un node pour attendre une heure précise
 * Un node pour publier sur Twitter
+
+### Notes Importantes
+- Structure workflow critique : L'ordre des nœuds est essentiel (Merge → Function format → ChatGPT → Function combine → Function HTML)
+- Noms de nœuds : À adapter selon votre workflow spécifique
+- Coûts optimisés : 1 appel ChatGPT au lieu de 15 (économies significatives)
+- Performance : Exécution complète en quelques secondes au lieu de minutes
+- Modularité : Chaque nœud Function peut être testé indépendamment
