@@ -6,7 +6,7 @@
 - Tailwind CSS + CSS vanilla pour styling email
 - IA:claude+chatGPT pour debuger
 
-## Semaine du 17/11/2025
+## Semaine du 17/11/2025 (voir Lab1)
 - Nom : Maher Ben Hdibi
 - Tâches réalisées : Installation de n8n, création du workflow Google Sheets → Gmail (lab01)
 - Apprentissages : Comment connecter Google Sheets et Gmail dans n8n
@@ -16,7 +16,7 @@
     - Génération automatique du contenu de la newsletter avec ChatGPT (ou un agent AI), tester l’envoi automatique
     - Adapter le contenu selon un contexte précis ou un template donné
 
-## Semaine du 24/11/2025
+## Semaine du 24/11/2025 voir (Lab2)
 - Nom : Maher Ben Hdibi
 ### Tâches Réalisées
 
@@ -46,7 +46,7 @@ Nécessité d’harmoniser les données avant le Merge
 - Créer un template HTML personnalisé pour la newsletter
 - Effectuer des tests complets d'envoi automatique avec le template final
 
-## Semaine du 01/12/2025
+## Semaine du 01/12/2025 (Voir Lab3)
 - Nom : Maher Ben Hdibi
 ### Tâches Réalisées
 
@@ -89,6 +89,34 @@ Nécessité d’harmoniser les données avant le Merge
 ### Objectifs semaine suivante : 
  **Nouvelle Newsletter Spécialisée** : Music Releases Aggregator
 - Spotify - Nouvelles pistes/playlists (API Spotify Web)
-- SoundCloud - Nouveaux tracks d'artistes suivis (API SoundCloud)
-- Beatport - Nouveaux releases et charts électronique (Web scraping ou API)
-- News électronique générale - House, Afro-House, Deep Tech (RSS feeds + sources spécialisées)
+- News électronique générale - House, Afro-House, Deep Tech 
+## Semaine du 01/12/2025 Phase 2 (Voir Lab4)
+- Nom : Maher Ben Hdibi
+### Tâches Réalisées
+
+- Architecture finale : `Cron → →Google Sheet→ html request → split out  → html request → Function (data extraction) → Function (HTML generator)→Google Sheet →Merge → Email`
+
+**Intégration Spotify**
+- Récupération des dernières pistes, singles et EPs pour les artistes ciblés via Spotify Web API.
+- Gestion des genres (ex. Afro House) et filtrage des releases pertinentes.
+- Pagination (limit + offset) pour traiter tous les albums et singles.
+
+
+**Gestion des données**
+- Création d'une fonction "Format Items" pour préparer les données pour ChatGPT
+- Passage des données complètes au générateur HTML final
+
+### Apprentissages
+- Architecture de workflows complexes avec multiple sources de données
+- Comprendre comment identifier correctement un artiste via artist_id pour éviter les homonymes et récupérer les bonnes releases.
+- Utilisation de ngrok pour gérer le redirect URI sécurisé en HTTPS avec n8n, permettant de contourner les limitations de localhost.
+- Création de templates HTML avec injection de données dynamiques
+- Manipulation des structures de données imbriquées dans n8n
+- Maitrise de l’architecture n8n : SplitInBatches → HTTP Request → Function → Merge → Email,
+### Difficultés Rencontrées
+- **Recherche d’artistes multiples** : Si plusieurs artistes partagent un nom similaire, l’overflow des données peut compliquer le Merge.
+- **Albums vs Singles vs EPs** : Endpoint /browse/new-releases ne retourne que des albums, pas de pistes individuelles
+- **Integration de OauthV2 spotify avec N8N** : redirect_uri n’accepte pas localhost. Une solution est d’utiliser ngrok pour créer un port forwarding sécurisé en HTTPS.
+- **Merge de données hétérogènes** : La fusion des résultats de l’API Spotify avec le template de newsletter nécessite d’harmoniser les structures JSON pour éviter des erreurs ou un overflow de données.
+
+
