@@ -43,3 +43,8 @@ Chaque node réalise une action, par exemple :
 - Coûts optimisés : 1 appel ChatGPT au lieu de 15 (économies significatives)
 - Performance : Exécution complète en quelques secondes au lieu de minutes
 - Modularité : Chaque nœud Function peut être testé indépendamment
+
+### Prompts utilisés
+- [Chat Gpt](https://chatgpt.com/share/69335990-ff5c-800a-9886-ea215db85c68) 
+### Source utlil
+- [redit ](https://www.reddit.com/r/n8n/comments/1lc9g3n/solved_local_n8n_spotify_oauth/ ) 

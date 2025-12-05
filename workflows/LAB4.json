@@ -1,0 +1,343 @@
+{
+  "name": "LAB4",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        448
+      ],
+      "id": "1a00a301-39cc-463a-be68-f3ea1991fdd2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FcJV3CPgLRKstIbLQeIV1t0cVOmrkXL3Pugr2SHTOWM",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FcJV3CPgLRKstIbLQeIV1t0cVOmrkXL3Pugr2SHTOWM/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:A"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        624
+      ],
+      "id": "ebec14e6-ea00-42b7-83df-2015c05207e5",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rdCNhh4JXUDHVETx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json[\"email\"]}}",
+        "subject": "=Weekly Newsletter – {{ $now.startOf('week').toISODate() }}",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        880,
+        544
+      ],
+      "id": "649a34b8-4a08-4d0e-b063-21f27acfe0f1",
+      "name": "Send a message",
+      "webhookId": "d3cfd62d-c3a2-4afc-8f40-a692bc92a980",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "j2XU9iuK8vxEaECl",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        720,
+        528
+      ],
+      "id": "a6ed6964-e906-4749-a478-ad9a5f517cc1",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * N8N Email Template Generator for Spotify Singles Newsletter\n * \n * Fixed version that handles multiple items with singles arrays\n * Place this in a Function node BEFORE the Send Email node\n */\n\n// Get ALL items from input\nconst allItems = $input.all();\n\n// Flatten all singles from all items into one array\nlet allSingles = [];\nallItems.forEach(item => {\n  if (item.json.singles && Array.isArray(item.json.singles)) {\n    allSingles = allSingles.concat(item.json.singles);\n  }\n});\n\n// Remove duplicates (by albumId)\nconst uniqueSingles = [];\nconst seenIds = new Set();\n\nallSingles.forEach(single => {\n  if (!seenIds.has(single.albumId)) {\n    uniqueSingles.push(single);\n    seenIds.add(single.albumId);\n  }\n});\n\nconst singles = uniqueSingles;\nconst currentYear = new Date().getFullYear();\n\n// Generate HTML for each single\nconst singlesHtml = singles.map(single => `\n  <div class=\"single-card\">\n    <img src=\"${single.cover || 'https://via.placeholder.com/300'}\" alt=\"${single.title}\" class=\"single-cover\" />\n    <div class=\"single-info\">\n      <div class=\"single-title\">${single.title}</div>\n      <div class=\"single-artists\">${single.artistsString}</div>\n      <div class=\"single-date\">📅 ${single.releaseDate}</div>\n      <a href=\"${single.link}\" target=\"_blank\" class=\"single-link\">Listen on Spotify →</a>\n    </div>\n  </div>\n`).join('');\n\n// Generate complete HTML email\nconst htmlEmail = `\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Latest Spotify Singles</title>\n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n        \n        body {\n            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;\n            background-color: #f5f5f5;\n            color: #333;\n        }\n        \n        .container {\n            max-width: 800px;\n            margin: 0 auto;\n            background-color: #ffffff;\n        }\n        \n        .header {\n            background: linear-gradient(135deg, #1DB954 0%, #191414 100%);\n            padding: 40px 20px;\n            text-align: center;\n            color: white;\n        }\n        \n        .header h1 {\n            font-size: 32px;\n            margin-bottom: 8px;\n            font-weight: 700;\n        }\n        \n        .header p {\n            font-size: 14px;\n            opacity: 0.9;\n        }\n        \n        .content {\n            padding: 40px 20px;\n        }\n        \n        .intro {\n            font-size: 16px;\n            color: #555;\n            margin-bottom: 30px;\n            line-height: 1.6;\n        }\n        \n        .singles-grid {\n            display: grid;\n            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));\n            gap: 20px;\n            margin-bottom: 40px;\n        }\n        \n        .single-card {\n            background: #f9f9f9;\n            border: 1px solid #e0e0e0;\n            border-radius: 8px;\n            overflow: hidden;\n        }\n        \n        .single-cover {\n            width: 100%;\n            max-height: 300px;\n            object-fit: cover;\n            background: #ddd;\n            display: block;\n        }\n        \n        .single-info {\n            padding: 16px;\n        }\n        \n        .single-title {\n            font-size: 16px;\n            font-weight: 600;\n            color: #1DB954;\n            margin-bottom: 8px;\n            line-height: 1.4;\n        }\n        \n        .single-artists {\n            font-size: 13px;\n            color: #666;\n            margin-bottom: 12px;\n        }\n        \n        .single-date {\n            font-size: 12px;\n            color: #999;\n            margin-bottom: 12px;\n        }\n        \n        .single-link {\n            display: inline-block;\n            background-color: #1DB954;\n            color: white;\n            padding: 8px 16px;\n            border-radius: 20px;\n            text-decoration: none;\n            font-size: 12px;\n            font-weight: 600;\n        }\n        \n        .single-link:hover {\n            background-color: #1ed760;\n        }\n        \n        .stats {\n            background: #f0f0f0;\n            padding: 20px;\n            border-radius: 8px;\n            margin-bottom: 30px;\n            text-align: center;\n        }\n        \n        .stats-number {\n            font-size: 32px;\n            font-weight: 700;\n            color: #1DB954;\n        }\n        \n        .stats-label {\n            font-size: 14px;\n            color: #666;\n            margin-top: 4px;\n        }\n        \n        .footer {\n            background-color: #191414;\n            color: #b3b3b3;\n            padding: 30px 20px;\n            text-align: center;\n            font-size: 12px;\n            border-top: 1px solid #282828;\n        }\n        \n        .footer a {\n            color: #1DB954;\n            text-decoration: none;\n        }\n        \n        @media (max-width: 600px) {\n            .singles-grid {\n                grid-template-columns: 1fr !important;\n            }\n            \n            .header h1 {\n                font-size: 24px;\n            }\n            \n            .content {\n                padding: 20px;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <!-- Header -->\n        <div class=\"header\">\n            <h1>🎵 Latest Spotify Singles</h1>\n            <p>Your weekly dose of new music</p>\n        </div>\n        \n        <!-- Content -->\n        <div class=\"content\">\n            <p class=\"intro\">\n                Hey there! 🎧 Check out the latest singles from your favorite artists. Click on any single to listen now on Spotify!\n            </p>\n            \n            <!-- Stats -->\n            <div class=\"stats\">\n                <div class=\"stats-number\">${singles.length}</div>\n                <div class=\"stats-label\">New Singles</div>\n            </div>\n            \n            <!-- Singles Grid -->\n            <div class=\"singles-grid\">\n                ${singlesHtml}\n            </div>\n        </div>\n        \n        <!-- Footer -->\n        <div class=\"footer\">\n            <p>© ${currentYear} Spotify Singles Newsletter</p>\n            <p style=\"margin-top: 12px;\">\n                You're receiving this because you subscribed to our newsletter.\n            </p>\n        </div>\n    </div>\n</body>\n</html>\n`;\n\n// Return the email data for Send Email node\nreturn {\n  json: {\n    html: htmlEmail,\n    subject: `🎵 ${singles.length} New Spotify Singles - ${new Date().toLocaleDateString()}`,\n    singlesCount: singles.length,\n    singles: singles,\n    debug: {\n      totalItems: allItems.length,\n      totalSingles: allSingles.length,\n      uniqueSingles: singles.length\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        192
+      ],
+      "id": "5b2a6992-fae8-4011-87dc-a5ec4005071e",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.spotify.com/v1/artists/{{ $json[\"artists.items[0].id\"] }}/albums?include_groups=single&limit=1 ",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "spotifyOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        432,
+        192
+      ],
+      "id": "16094b8a-a076-4b49-8666-a121b4f4bae9",
+      "name": "HTTP Request",
+      "credentials": {
+        "spotifyOAuth2Api": {
+          "id": "3FbslNmwjzErP6xk",
+          "name": "Spotify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.spotify.com/v1/search?q={{encodeURIComponent($json[\"artist_name\"])}}&type=artist&limit=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "spotifyOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -32,
+        192
+      ],
+      "id": "842e4a2f-0137-4d8e-8fd8-f5d64c5b81c8",
+      "name": "HTTP Request1",
+      "credentials": {
+        "spotifyOAuth2Api": {
+          "id": "3FbslNmwjzErP6xk",
+          "name": "Spotify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1BmpSC75hXh4_p08nCtzdG0UewwTuDHysNqvKdUx9Ybg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BmpSC75hXh4_p08nCtzdG0UewwTuDHysNqvKdUx9Ybg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -192,
+        288
+      ],
+      "id": "30bd96fc-9cbb-414d-8227-d259aa948237",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rdCNhh4JXUDHVETx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "artists.items[0].id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        208,
+        192
+      ],
+      "id": "f260abf7-8b3e-42a8-8cbb-3baddf1f0b76",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const albumData = item.json;\n  const singles = [];\n\n  // Process each artist's albums response\n  if (albumData.items && Array.isArray(albumData.items)) {\n    albumData.items.forEach(album => {\n      // Check if this single already exists in our array\n      const existingSingle = singles.find(s => s.albumId === album.id);\n\n      if (existingSingle) {\n        // Merge artists if single already exists\n        const newArtists = album.artists\n          .map(artist => artist.name)\n          .filter(name => !existingSingle.artists.includes(name));\n        \n        existingSingle.artists = [...existingSingle.artists, ...newArtists];\n        existingSingle.artistsString = existingSingle.artists.join(', ');\n      } else {\n        // Create new single entry\n        singles.push({\n          albumId: album.id,\n          title: album.name,\n          artists: album.artists.map(artist => artist.name),\n          artistsString: album.artists.map(artist => artist.name).join(', '),\n          cover: album.images && album.images.length > 0 ? album.images[0].url : null,\n          coverThumb: album.images && album.images.length > 1 ? album.images[1].url : null,\n          link: album.external_urls?.spotify || null,\n          spotifyUri: album.uri || null,\n          releaseDate: album.release_date || null,\n          releaseDatePrecision: album.release_date_precision || null,\n          totalTracks: album.total_tracks || 1,\n          albumType: album.album_type || 'single'\n        });\n      }\n    });\n  }\n\n  return {\n    ...item,\n    json: {\n      singles: singles,\n      count: singles.length,\n      processedAt: new Date().toISOString()\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        48
+      ],
+      "id": "ae5c898a-198e-4b07-b4d8-02d89fd7c9a5",
+      "name": "Code in JavaScript2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cf6bc91f-5fd4-4e4d-9a1f-ab2d58086496",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b5792bfb47da495a169712f167f18a2261e72a31b5ec51afed8e9f7ea50badb0"
+  },
+  "id": "w9vGCP5ig765aIS4",
+  "tags": [
+    {
+      "name": "v3.0",
+      "id": "ED459mqoDxyM5BWn",
+      "updatedAt": "2025-12-05T20:39:21.521Z",
+      "createdAt": "2025-12-05T20:39:21.521Z"
+    }
+  ]
+}
